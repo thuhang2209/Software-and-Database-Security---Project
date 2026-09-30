@@ -1,50 +1,101 @@
 @model Software_and_Database_Security___Project.Models.Assignment
 @{
-    ViewData["Title"] = "Chấm bài - " + Model.Title;
+    ViewData["Title"] = "Chấm điểm - " + Model.Title;
 }
-<div class="container mt-4">
-    <h3>Danh sách bài nộp: @Model.Title</h3>
-    <table class="table table-bordered table-hover mt-3">
-        <thead class="table-dark">
-            <tr>
-                <th>Sinh viên</th>
-                <th>Thời gian nộp</th>
-                <th>Bài làm</th>
-                <th>Điểm</th>
-                <th>Thao tác</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var sub in Model.Submissions)
-            {
+
+<div class="custom-card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill mb-2">BÀI TẬP</span>
+            <h3 class="fw-bold text-dark">@Model.Title</h3>
+            <p class="text-muted mb-0 small">Thuộc bài học: <strong>@Model.Lesson?.Title</strong> | Lớp: <strong>@Model.Lesson?.Classroom?.Name</strong></p>
+        </div>
+        <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2">
+            Đã nộp: @Model.Submissions.Count bài
+        </span>
+    </div>
+</div>
+
+<div class="custom-card overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
                 <tr>
-                    <td>@sub.Student?.FullName (@sub.Student?.Email)</td>
-                    <td>@sub.SubmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
-                    <td><pre class="bg-light p-2 rounded">@sub.Content</pre></td>
-                    <td>@(sub.Grade.HasValue ? sub.Grade.ToString() : "Chưa chấm")</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#grade-@sub.Id">
-                            Chấm điểm
-                        </button>
-                    </td>
+                    <th class="ps-4">HỌC VIÊN</th>
+                    <th>THỜI GIAN NỘP</th>
+                    <th>BÀI LÀM</th>
+                    <th>KẾT QUẢ</th>
+                    <th class="text-end pe-4">THAO TÁC</th>
                 </tr>
-                <tr class="collapse" id="grade-@sub.Id">
-                    <td colspan="5" class="bg-light">
-                        <form asp-action="Grade" method="post" class="row g-2 align-items-center p-2">
-                            <input type="hidden" name="submissionId" value="@sub.Id" />
-                            <div class="col-md-2">
-                                <input type="number" step="0.25" min="0" max="10" name="grade" value="@sub.Grade" class="form-control" placeholder="Điểm (0-10)" required />
+            </thead>
+            <tbody>
+                @if (!Model.Submissions.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox display-5 d-block mb-2"></i>
+                            Chưa có học viên nào nộp bài tập này[cite: 8].
+                        </td>
+                    </tr>
+                }
+                @foreach (var sub in Model.Submissions)
+                {
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold">@sub.Student?.FullName</div>
+                            <small class="text-muted">@sub.Student?.Email</small>
+                        </td>
+                        <td><small class="text-muted">@sub.SubmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small></td>
+                        <td>
+                            <div class="p-2 bg-light rounded small font-monospace text-truncate" style="max-width: 250px;">
+                                @sub.Content
                             </div>
-                            <div class="col-md-8">
-                                <input type="text" name="feedback" value="@sub.Feedback" class="form-control" placeholder="Nhận xét phản hồi" />
+                        </td>
+                        <td>
+                            @if (sub.Grade.HasValue)
+                            {
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2 fw-bold">
+                                    @sub.Grade / 10
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-2">
+                                    Chưa chấm
+                                </span>
+                            }
+                        </td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-outline-primary btn-sm rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#grade-@sub.Id">
+                                <i class="bi bi-pencil-square me-1"></i> Đánh giá
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="collapse" id="grade-@sub.Id">
+                        <td colspan="5" class="bg-light p-4">
+                            <div class="card p-3 border-0 shadow-sm">
+                                <h6 class="fw-bold text-dark mb-3">Nội dung bài làm đầy đủ:</h6>
+                                <pre class="p-3 bg-light rounded text-dark border mb-3" style="white-space: pre-wrap;">@sub.Content</pre>
+
+                                <form asp-action="Grade" method="post" class="row g-3">
+                                    <input type="hidden" name="submissionId" value="@sub.Id" />
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">Điểm số (thang 10):</label>
+                                        <input type="number" step="0.25" min="0" max="10" name="grade" value="@sub.Grade" class="form-control" placeholder="0 - 10" required />
+                                    </div>
+                                    <div class="col-md-7">
+                                        <label class="form-label small fw-bold">Nhận xét chi tiết:</label>
+                                        <input type="text" name="feedback" value="@sub.Feedback" class="form-control" placeholder="Nhập lời phê cho học viên..." />
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-gradient w-100">Lưu kết quả</button>
+                                    </div>
+                                </form>
                             </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-success w-100">Lưu điểm</button>
-                            </div>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>

@@ -1,45 +1,71 @@
 @model Software_and_Database_Security___Project.Models.LoginViewModel
 @{
-    ViewData["Title"] = "Đăng nhập LMS";
+    ViewData["Title"] = "Đăng nhập";
 }
 
-<div class="row justify-content-center mt-5">
-    <div class="col-md-5">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white text-center py-3">
-                <h4 class="mb-0">HỆ THỐNG SECURE LMS</h4>
-            </div>
-            <div class="card-body p-4">
-                <form asp-controller="Account" asp-action="Login" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label font-weight-bold">Email</label>
-                        <input asp-for="Email" class="form-control" placeholder="admin@lms.com" />
-                        <span asp-validation-for="Email" class="text-danger small"></span>
+<div class="row justify-content-center align-items-center" style="min-height: 75vh;">
+    <div class="col-lg-10 col-xl-9">
+        <div class="custom-card overflow-hidden shadow-lg border-0">
+            <div class="row g-0">
+                <!-- Cột trái: Giới thiệu hệ thống -->
+                <div class="col-md-5 p-5 text-white d-flex flex-column justify-content-between" style="background: var(--primary-gradient);">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <i class="bi bi-shield-check fs-2"></i>
+                            <span class="fs-4 fw-bold">EduSecure LMS</span>
+                        </div>
+                        <p class="text-white-50">Hệ thống quản lý học tập trực tuyến tích hợp kiến trúc Zero Trust, Resource-based Access Control và kiểm toán tập trung[cite: 8].</p>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Password" class="form-label font-weight-bold">Mật khẩu</label>
-                        <input asp-for="Password" class="form-control" placeholder="Mật khẩu" />
-                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    <div class="bg-white bg-opacity-10 p-3 rounded-3 small">
+                        <div class="fw-bold mb-1"><i class="bi bi-info-circle me-1"></i> Tài khoản mẫu thử nghiệm:</div>
+                        <div class="text-white-50">Mật khẩu chung: <code class="text-warning">SecurePass@123</code></div>
+                        <ul class="list-unstyled mb-0 mt-2 text-white-50">
+                            <li>• <strong>Admin:</strong> admin@lms.com</li>
+                            <li>• <strong>Giảng viên:</strong> teacher1@lms.com</li>
+                            <li>• <strong>Sinh viên:</strong> student1@lms.com</li>
+                        </ul>
                     </div>
+                </div>
 
-                    <div class="mb-3 form-check">
-                        <input asp-for="RememberMe" class="form-check-input" />
-                        <label asp-for="RememberMe" class="form-check-label">Ghi nhớ đăng nhập</label>
-                    </div>
+                <!-- Cột phải: Form nhập thông tin -->
+                <div class="col-md-7 p-5 bg-white">
+                    <h3 class="fw-bold text-dark mb-1">Chào mừng trở lại!</h3>
+                    <p class="text-muted small mb-4">Vui lòng nhập tài khoản để truy cập tài nguyên lớp học</p>
 
-                    <button type="submit" class="btn btn-primary w-100 py-2">Đăng nhập</button>
-                </form>
-            </div>
-            <div class="card-footer bg-light text-muted small">
-                <strong>Tài khoản thử nghiệm (Mật khẩu: SecurePass@123):</strong>
-                <ul class="mb-0 mt-1 pl-3">
-                    <li>Quản trị viên: <code>admin@lms.com</code></li>
-                    <li>Giảng viên: <code>teacher1@lms.com</code> / <code>teacher2@lms.com</code></li>
-                    <li>Sinh viên: <code>student1@lms.com</code> / <code>student2@lms.com</code></li>
-                </ul>
+                    <form asp-controller="Account" asp-action="Login" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small border-0 mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label small fw-bold text-secondary">EMAIL HỌC VIỆN</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-muted"></i></span>
+                                <input asp-for="Email" class="form-control bg-light border-start-0 py-2" placeholder="ten@lms.com" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label small fw-bold text-secondary">MẬT KHẨU</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-key text-muted"></i></span>
+                                <input asp-for="Password" type="password" class="form-control bg-light border-start-0 py-2" placeholder="••••••••" />
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input asp-for="RememberMe" class="form-check-input" />
+                                <label asp-for="RememberMe" class="form-check-label small text-muted">Ghi nhớ phiên đăng nhập</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-gradient w-100 py-2 fs-6">
+                            Đăng nhập <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
