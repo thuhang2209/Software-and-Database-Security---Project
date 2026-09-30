@@ -1,0 +1,41 @@
+@model Software_and_Database_Security___Project.Models.Lesson
+@{
+    ViewData["Title"] = Model.Title;
+}
+<div class="container mt-4">
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h3>@Model.Title</h3>
+            <p class="text-muted">Lớp: @Model.Classroom?.Name</p>
+            <hr />
+            @* Render tự động mã hóa chuỗi tránh tấn công XSS theo chuẩn giáo trình *@
+            <div class="p-3 bg-light rounded" style="white-space: pre-wrap;">@Model.Content</div>
+        </div>
+    </div>
+
+    <h4>Bài tập thực hành</h4>
+    @if (User.IsInRole("Teacher"))
+    {
+        <a asp-controller="Assignments" asp-action="Create" asp-route-lessonId="@Model.Id" class="btn btn-sm btn-outline-primary mb-3">+ Giao bài tập</a>
+    }
+
+    <div class="list-group">
+        @foreach (var asm in Model.Assignments)
+        {
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <h6>@asm.Title</h6>
+                    <small class="text-muted">Hạn nộp: @(asm.Deadline.HasValue ? asm.Deadline.Value.ToString("dd/MM/yyyy HH:mm") : "Không giới hạn")</small>
+                </div>
+                @if (User.IsInRole("Student"))
+                {
+                    <a asp-controller="Submissions" asp-action="Submit" asp-route-assignmentId="@asm.Id" class="btn btn-sm btn-success">Nộp bài</a>
+                }
+                else if (User.IsInRole("Teacher"))
+                {
+                    <a asp-controller="Submissions" asp-action="Index" asp-route-assignmentId="@asm.Id" class="btn btn-sm btn-info text-white">Xem danh sách nộp</a>
+                }
+            </div>
+        }
+    </div>
+</div>

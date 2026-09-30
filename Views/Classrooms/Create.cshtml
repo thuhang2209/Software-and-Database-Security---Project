@@ -1,0 +1,23 @@
+@{
+    ViewData["Title"] = "Tạo Lớp học";
+}
+<div class="container mt-4 col-md-6">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white"><h5>Tạo Lớp học mới</h5></div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div class="mb-3">
+                    <label class="form-label">Tên lớp:</label>
+                    <input name="name" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Chỉ định Giảng viên:</label>
+                    <select name="teacherId" asp-items="ViewBag.Teachers" class="form-select" required>
+                        <option value="">-- Chọn giảng viên --</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success w-100">Lưu lớp học</button>
+            </form>
+        </div>
+    </div>
+</div>
