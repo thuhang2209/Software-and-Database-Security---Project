@@ -1,0 +1,22 @@
+@{
+    ViewData["Title"] = "Tạo bài học mới";
+}
+<div class="container mt-4 col-md-8">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white"><h5>Thêm bài học mới</h5></div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <input type="hidden" name="classId" value="@ViewBag.ClassId" />
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Tiêu đề:</label>
+                    <input name="title" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Nội dung bài học:</label>
+                    <textarea name="content" class="form-control" rows="6" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Lưu bản nháp</button>
+            </form>
+        </div>
+    </div>
+</div>
