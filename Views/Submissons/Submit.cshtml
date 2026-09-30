@@ -1,0 +1,31 @@
+@model Software_and_Database_Security___Project.Models.Submission
+@{
+    var asm = ViewBag.Assignment as Software_and_Database_Security___Project.Models.Assignment;
+    ViewData["Title"] = "Nộp bài - " + asm?.Title;
+}
+<div class="container mt-4 col-md-8">
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white"><h5>@asm?.Title</h5></div>
+        <div class="card-body">
+            <p><strong>Yêu cầu bài tập:</strong> @asm?.Instructions</p>
+            <hr />
+            <form asp-action="Submit" method="post">
+                <input type="hidden" name="assignmentId" value="@asm?.Id" />
+                <div class="mb-3">
+                    <label class="form-label font-weight-bold">Bài làm của bạn (Nhập văn bản/Mã nguồn):</label>
+                    <textarea name="content" class="form-control" rows="8" required>@(Model?.Content)</textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Gửi bài làm</button>
+            </form>
+
+            @if (Model?.Grade != null)
+            {
+                <div class="alert alert-info mt-4">
+                    <h6>Kết quả đánh giá từ Giảng viên:</h6>
+                    <p><strong>Điểm số:</strong> @Model.Grade</p>
+                    <p><strong>Nhận xét:</strong> @Model.Feedback</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

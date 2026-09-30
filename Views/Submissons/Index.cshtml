@@ -1,0 +1,50 @@
+@model Software_and_Database_Security___Project.Models.Assignment
+@{
+    ViewData["Title"] = "Chấm bài - " + Model.Title;
+}
+<div class="container mt-4">
+    <h3>Danh sách bài nộp: @Model.Title</h3>
+    <table class="table table-bordered table-hover mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>Sinh viên</th>
+                <th>Thời gian nộp</th>
+                <th>Bài làm</th>
+                <th>Điểm</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var sub in Model.Submissions)
+            {
+                <tr>
+                    <td>@sub.Student?.FullName (@sub.Student?.Email)</td>
+                    <td>@sub.SubmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                    <td><pre class="bg-light p-2 rounded">@sub.Content</pre></td>
+                    <td>@(sub.Grade.HasValue ? sub.Grade.ToString() : "Chưa chấm")</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#grade-@sub.Id">
+                            Chấm điểm
+                        </button>
+                    </td>
+                </tr>
+                <tr class="collapse" id="grade-@sub.Id">
+                    <td colspan="5" class="bg-light">
+                        <form asp-action="Grade" method="post" class="row g-2 align-items-center p-2">
+                            <input type="hidden" name="submissionId" value="@sub.Id" />
+                            <div class="col-md-2">
+                                <input type="number" step="0.25" min="0" max="10" name="grade" value="@sub.Grade" class="form-control" placeholder="Điểm (0-10)" required />
+                            </div>
+                            <div class="col-md-8">
+                                <input type="text" name="feedback" value="@sub.Feedback" class="form-control" placeholder="Nhận xét phản hồi" />
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-success w-100">Lưu điểm</button>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
