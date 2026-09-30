@@ -1,0 +1,33 @@
+@model IEnumerable<Software_and_Database_Security___Project.Models.Classroom>
+@{
+    ViewData["Title"] = "Quản lý Lớp học";
+}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Danh sách Lớp học</h2>
+        <a asp-action="Create" class="btn btn-primary">+ Tạo lớp mới</a>
+    </div>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Tên lớp</th>
+                <th>Giảng viên</th>
+                <th>Sĩ số</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td>@c.Name</td>
+                    <td>@(c.Teacher?.FullName ?? "Chưa phân công")</td>
+                    <td>@c.Enrollments.Count học viên</td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@c.Id" class="btn btn-sm btn-info text-white">Xem & Thêm sinh viên</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

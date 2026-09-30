@@ -1,0 +1,39 @@
+@model IEnumerable<Software_and_Database_Security___Project.Models.Lesson>
+@{
+    var classroom = ViewBag.Classroom as Software_and_Database_Security___Project.Models.Classroom;
+    ViewData["Title"] = "Bài học - " + classroom?.Name;
+}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Bài học: @classroom?.Name</h2>
+        @if (User.IsInRole("Teacher"))
+        {
+            <a asp-action="Create" asp-route-classId="@classroom?.Id" class="btn btn-primary">+ Thêm bài học</a>
+        }
+    </div>
+    <div class="list-group">
+        @foreach (var item in Model)
+        {
+            if (User.IsInRole("Student") && !item.IsPublished) { continue; }
+            <div class="list-group-item d-flex justify-content-between align-items-center mb-2 shadow-sm rounded">
+                <div>
+                    <h5 class="mb-1"><a asp-action="Details" asp-route-id="@item.Id">@item.Title</a></h5>
+                    @if (item.IsPublished)
+                    {
+                        <span class="badge bg-success">Đã xuất bản</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Bản nháp (Draft)</span>
+                    }
+                </div>
+                @if (User.IsInRole("Teacher") && !item.IsPublished)
+                {
+                    <form asp-action="Publish" asp-route-id="@item.Id" method="post">
+                        <button type="submit" class="btn btn-sm btn-outline-success">Xuất bản cho học sinh</button>
+                    </form>
+                }
+            </div>
+        }
+    </div>
+</div>
