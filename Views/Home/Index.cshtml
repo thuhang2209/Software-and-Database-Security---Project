@@ -1,19 +1,24 @@
 ﻿@model IEnumerable<Software_and_Database_Security___Project.Models.Classroom>
 @{
-    ViewData["Title"] = "Bảng điều khiển";
+    ViewData["Title"] = "Không gian Học tập";
 }
 
-<div class="p-4 p-md-5 mb-4 rounded-4 text-white shadow-sm" style="background: var(--primary-gradient);">
+<!-- Hero Section với góc bo siêu lớn 48px và nền Primary Container -->
+<div class="p-5 mb-5 shadow-sm position-relative overflow-hidden" 
+     style="border-radius: 48px; background: linear-gradient(135deg, var(--md-sys-color-primary-container) 0%, #f4e8ff 100%);">
     <div class="row align-items-center">
         <div class="col-lg-8">
-            <h1 class="display-6 fw-bold">Không gian Học tập & Đào tạo</h1>
-            <p class="lead mb-0 text-white-50">Xem các khóa học, theo dõi bài tập và nhận đánh giá từ giảng viên với quyền truy cập bảo mật cao.</p>
+            <span class="md-chip mb-3 bg-white text-dark shadow-sm">
+                <i class="bi bi-shield-check" style="color: var(--md-sys-color-primary);"></i> Zero Trust & RBAC Enabled
+            </span>
+            <h1 class="display-6 fw-bold" style="color: var(--md-sys-color-on-primary-container);">Hệ thống Quản lý Học tập</h1>
+            <p class="lead mb-0 text-muted fs-6">Quản lý khóa học, tài liệu, bài tập và hoạt động học tập theo vai trò và quyền truy cập.</p>
         </div>
-        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+        <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
             @if (User.IsInRole("Admin"))
             {
-                <a asp-controller="Classrooms" asp-action="Create" class="btn btn-light rounded-pill px-4 fw-bold shadow">
-                    <i class="bi bi-plus-circle me-1"></i> Mở Lớp Mới
+                <a asp-controller="Classrooms" asp-action="Create" class="md-btn md-btn-filled shadow">
+                    <i class="bi bi-plus-lg"></i> Mở Lớp Học Mới
                 </a>
             }
         </div>
@@ -21,16 +26,20 @@
 </div>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold mb-0 text-dark"><i class="bi bi-collection-play me-2 text-primary"></i>Lớp học khả dụng của bạn</h4>
-    <span class="text-muted small">Hiển thị @(Model?.Count() ?? 0) lớp học</span>
+    <h4 class="fw-bold mb-0" style="color: var(--md-sys-color-on-background);">
+        <i class="bi bi-journal-bookmark-fill me-2" style="color: var(--md-sys-color-primary);"></i>Khóa học của bạn
+    </h4>
+    <span class="md-chip" style="background-color: var(--md-sys-color-secondary-container);">
+        @(Model?.Count() ?? 0) khóa học
+    </span>
 </div>
 
 @if (Model == null || !Model.Any())
 {
-    <div class="custom-card p-5 text-center">
-        <i class="bi bi-folder2-open display-3 text-muted"></i>
-        <h5 class="mt-3 text-dark fw-bold">Bạn chưa thuộc lớp học nào</h5>
-        <p class="text-muted mb-0 small">Vui lòng liên hệ Admin để được cấp quyền ghi danh vào lớp đào tạo tương ứng.</p>
+    <div class="md-card p-5 text-center">
+        <i class="bi bi-inbox display-4 text-muted mb-2"></i>
+        <h5 class="fw-bold">Bạn chưa thuộc lớp học nào</h5>
+        <p class="text-muted small mb-0">Vui lòng liên hệ quản trị viên để được phân quyền ghi danh vào lớp tương ứng[cite: 14].</p>
     </div>
 }
 else
@@ -39,21 +48,30 @@ else
         @foreach (var c in Model)
         {
             <div class="col-md-6 col-lg-4">
-                <div class="custom-card custom-card-hover h-100 d-flex flex-column p-4">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2">
-                            <i class="bi bi-book-half me-1"></i> Khóa học
-                        </span>
-                        <div class="text-muted small"><i class="bi bi-people-fill me-1"></i>@c.Enrollments.Count học viên</div>
+                <div class="md-card md-card-interactive h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="md-chip bg-white shadow-sm" style="color: var(--md-sys-color-primary);">
+                                <i class="bi bi-mortarboard me-1"></i> Khóa học
+                            </span>
+                            <small class="text-muted"><i class="bi bi-people me-1"></i>@c.Enrollments.Count học viên</small>
+                        </div>
+
+                        <h5 class="fw-bold mb-2" style="color: var(--md-sys-color-on-surface);">@c.Name</h5>
+                        <p class="small text-muted mb-4">
+                            Giảng viên: <strong>@(c.Teacher?.FullName ?? "Chưa chỉ định")</strong>
+                        </p>
                     </div>
 
-                    <h5 class="fw-bold text-dark mb-2">@c.Name</h5>
-                    <p class="text-muted small mb-4 flex-grow-1">
-                        <i class="bi bi-person-badge me-1"></i> Giảng viên: <strong>@(c.Teacher?.FullName ?? "Chưa phân công")</strong>
-                    </p>
-
-                    <a asp-controller="Lessons" asp-action="Index" asp-route-classId="@c.Id" class="btn btn-outline-primary rounded-pill w-100 fw-semibold">
-                        Truy cập lớp học <i class="bi bi-arrow-right ms-1"></i>
+                    <a asp-controller="Lessons" asp-action="Index" asp-route-classId="@c.Id" class="md-btn md-btn-tonal w-100">
+                        @if (User.IsInRole("Admin") || User.IsInRole("Teacher"))
+                            {
+                                <span>Truy cập</span> <i class="bi bi-arrow-right ms-1"></i>
+                            }
+                            else
+                            {
+                                <span>Vào học ngay</span> <i class="bi bi-arrow-right ms-1"></i>
+                            }   
                     </a>
                 </div>
             </div>

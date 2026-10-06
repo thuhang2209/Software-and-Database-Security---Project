@@ -4,80 +4,83 @@
     ViewData["Title"] = "Bài học - " + cls?.Name;
 }
 
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-    <div>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-1 small">
-                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Lớp học</a></li>
-                <li class="breadcrumb-item active" aria-current="page">@cls?.Name</li>
-            </ol>
-        </nav>
-        <h3 class="fw-bold mb-0">@cls?.Name</h3>
-        <span class="text-muted small">Phụ trách bởi: <strong>@cls?.Teacher?.FullName</strong></span>
-    </div>
-
-    @if (User.IsInRole("Teacher"))
-    {
-        <a asp-action="Create" asp-route-classId="@cls?.Id" class="btn btn-gradient">
-            <i class="bi bi-plus-lg me-1"></i> Tạo Bài Học Mới
-        </a>
-    }
-</div>
-
-@if (!Model.Any())
-{
-    <div class="custom-card p-5 text-center">
-        <i class="bi bi-journal-x display-4 text-muted"></i>
-        <h5 class="mt-3 fw-bold">Chưa có bài giảng nào</h5>
-        <p class="text-muted small">Giảng viên sẽ cập nhật bài giảng sớm nhất có thể[cite: 8].</p>
-    </div>
-}
-else
-{
-    <div class="d-flex flex-column gap-3">
-        @foreach (var l in Model)
-        {
-            <div class="custom-card p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-3 bg-light p-3 text-primary fs-4 border">
-                        <i class="bi bi-file-earmark-text"></i>
-                    </div>
-                    <div>
-                        <h5 class="fw-bold mb-1">
-                            <a asp-action="Details" asp-route-id="@l.Id" class="text-dark text-decoration-none">@l.Title</a>
-                        </h5>
-                        <div>
-                            @if (l.IsPublished)
-                            {
-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
-                                    <i class="bi bi-check-circle-fill me-1"></i> Đã xuất bản
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill">
-                                    <i class="bi bi-lock-fill me-1"></i> Bản nháp (Học sinh chưa thấy)[cite: 8]
-                                </span>
-                            }
-                        </div>
-                    </div>
-                </div>
-
-                <div class="d-flex align-items-center gap-2">
-                    <a asp-action="Details" asp-route-id="@l.Id" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                        Chi tiết
-                    </a>
-
-                    @if (User.IsInRole("Teacher") && !l.IsPublished)
-                    {
-                        <form asp-action="Publish" asp-route-id="@l.Id" method="post" class="m-0">
-                            <button type="submit" class="btn btn-success btn-sm rounded-pill px-3">
-                                <i class="bi bi-send-check me-1"></i> Xuất bản
-                            </button>
-                        </form>
-                    }
-                </div>
+<!-- Khung tiêu đề lớp học chuẩn Material You -->
+<div class="md-card p-4 p-md-5 mb-4 shadow-sm" style="border-radius: 32px; background: linear-gradient(135deg, var(--md-sys-color-primary-container) 0%, #f4e8ff 100%);">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <span class="md-chip bg-white shadow-sm mb-2" style="color: var(--md-sys-color-primary);">
+                <i class="bi bi-mortarboard-fill"></i> Khóa học
+            </span>
+            <h2 class="display-6 fw-bold mb-1" style="color: var(--md-sys-color-on-primary-container);">@cls?.Name</h2>
+            <div class="small text-muted">
+                Giảng viên phụ trách: <strong>@(cls?.Teacher?.FullName ?? "Chưa chỉ định")</strong>
             </div>
+        </div>
+
+        @if (User.IsInRole("Teacher"))
+        {
+            <a asp-action="Create" asp-route-classId="@cls?.Id" class="md-btn md-btn-filled shadow">
+                <i class="bi bi-plus-lg"></i> Thêm Bài Học Mới
+            </a>
         }
     </div>
-}
+</div>
+
+<!-- Danh sách bài học -->
+<div class="d-flex flex-column gap-3">
+    @if (!Model.Any())
+    {
+        <div class="md-card p-5 text-center">
+            <i class="bi bi-journal-x display-4 text-muted mb-2"></i>
+            <h5 class="fw-bold" style="color: var(--md-sys-color-on-surface);">CHƯA CÓ BÀI HỌC</h5>
+            <p class="text-muted small mb-0">Giảng viên chưa đưa nội dung bài giảng lên lớp học này.</p>
+        </div>
+    }
+    @foreach (var item in Model)
+    {
+        if (User.IsInRole("Student") && !item.IsPublished) { continue; }
+
+        <div class="md-card md-card-interactive p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle p-3 d-flex align-items-center justify-content-center" 
+                     style="background-color: @(item.IsPublished ? "var(--md-sys-color-secondary-container)" : "var(--md-sys-color-surface-container-low)"); width: 50px; height: 50px;">
+                    <i class="bi @(item.IsPublished ? "bi-check2-circle text-primary" : "bi-lock text-muted") fs-4"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-1">
+                        <a asp-action="Details" asp-route-id="@item.Id" class="text-decoration-none" style="color: var(--md-sys-color-on-surface);">@item.Title</a>
+                    </h5>
+                    <div>
+                        @if (item.IsPublished)
+                        {
+                            <span class="md-chip bg-success-subtle text-success">
+                                <i class="bi bi-eye-fill"></i> Đã xuất bản
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="md-chip bg-warning-subtle text-warning-emphasis">
+                                <i class="bi bi-eye-slash-fill"></i> Bản nháp (Draft)
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <a asp-action="Details" asp-route-id="@item.Id" class="md-btn md-btn-outlined py-1 px-3">
+                    Chi tiết
+                </a>
+
+                @if (User.IsInRole("Teacher") && !item.IsPublished)
+                {
+                    <form asp-action="Publish" asp-route-id="@item.Id" method="post" class="m-0">
+                        <button type="submit" class="md-btn md-btn-tonal py-1 px-3">
+                            <i class="bi bi-send-check"></i> Xuất bản
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
+    }
+</div>

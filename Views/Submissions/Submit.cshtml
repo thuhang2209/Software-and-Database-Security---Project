@@ -3,29 +3,48 @@
     var asm = ViewBag.Assignment as Software_and_Database_Security___Project.Models.Assignment;
     ViewData["Title"] = "Nộp bài - " + asm?.Title;
 }
-<div class="container mt-4 col-md-8">
-    <div class="card shadow-sm">
-        <div class="card-header bg-success text-white"><h5>@asm?.Title</h5></div>
-        <div class="card-body">
-            <p><strong>Yêu cầu bài tập:</strong> @asm?.Instructions</p>
-            <hr />
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="md-card p-4 p-md-5 shadow-sm" style="border-radius: 32px;">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <span class="md-chip bg-white shadow-sm mb-2" style="color: var(--md-sys-color-primary);">
+                        <i class="bi bi-upload"></i> Nộp bài làm
+                    </span>
+                    <h3 class="fw-bold mb-1">@asm?.Title</h3>
+                </div>
+                <a asp-controller="Lessons" asp-action="Details" asp-route-id="@asm?.LessonId" class="md-btn md-btn-outlined">Quay lại bài học</a>
+            </div>
+
+            <div class="p-3 rounded-4 mb-4" style="background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container);">
+                <strong>Yêu cầu đề bài:</strong>
+                <p class="mb-0 small mt-1">@asm?.Instructions</p>
+            </div>
+
             <form asp-action="Submit" method="post">
                 <input type="hidden" name="assignmentId" value="@asm?.Id" />
-                <div class="mb-3">
-                    <label class="form-label font-weight-bold">Bài làm của bạn (Nhập văn bản/Mã nguồn):</label>
-                    <textarea name="content" class="form-control" rows="8" required>@(Model?.Content)</textarea>
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Gửi bài làm</button>
-            </form>
 
-            @if (Model?.Grade != null)
-            {
-                <div class="alert alert-info mt-4">
-                    <h6>Kết quả đánh giá từ Giảng viên:</h6>
-                    <p><strong>Điểm số:</strong> @Model.Grade</p>
-                    <p><strong>Nhận xét:</strong> @Model.Feedback</p>
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-muted">Nội dung bài làm (Nhập văn bản hoặc mã nguồn):</label>
+                    <textarea name="content" class="form-control rounded-4 p-3 bg-light border-0 font-monospace" rows="10" placeholder="Viết câu trả lời hoặc dán mã nguồn vào đây..." required>@(Model?.Content)</textarea>
                 </div>
-            }
+
+                @if (Model?.Grade != null)
+                {
+                    <div class="p-4 rounded-4 mb-4" style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);">
+                        <h5 class="fw-bold mb-2"><i class="bi bi-award-fill me-2"></i>Kết quả đánh giá từ Giảng viên</h5>
+                        <div class="mb-1"><strong>Điểm số:</strong> <span class="badge bg-white fs-6" style="color: var(--md-sys-color-primary);">@Model.Grade / 10</span></div>
+                        <div class="small"><strong>Nhận xét:</strong> @Model.Feedback</div>
+                    </div>
+                }
+                else
+                {
+                    <button type="submit" class="md-btn md-btn-filled w-100 py-3 fs-6">
+                        <i class="bi bi-cloud-arrow-up-fill me-1"></i> Gửi bài nộp
+                    </button>
+                }
+            </form>
         </div>
     </div>
 </div>

@@ -1,21 +1,59 @@
 @{
-    ViewData["Title"] = "Tạo bài học mới";
+    ViewData["Title"] = "Soạn thảo Bài học";
 }
-<div class="container mt-4 col-md-8">
-    <div class="card shadow-sm">
-        <div class="card-header bg-dark text-white"><h5>Thêm bài học mới</h5></div>
-        <div class="card-body">
-            <form asp-action="Create" method="post">
+
+<style>
+    .md-text-field {
+        background-color: var(--md-sys-color-surface-container-low);
+        border-radius: 12px 12px 0 0;
+        border: none;
+        border-bottom: 2px solid var(--md-sys-color-outline);
+        padding: 0.75rem 1rem;
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+    .md-text-field:focus {
+        background-color: #dfd7e6;
+        border-bottom: 2px solid var(--md-sys-color-primary);
+        box-shadow: none;
+        outline: none;
+    }
+</style>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="md-card p-4 p-md-5 shadow-sm" style="border-radius: 32px;">
+            <div class="d-inline-flex p-3 rounded-circle mb-3" style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-primary);">
+                <i class="bi bi-file-earmark-plus fs-3"></i>
+            </div>
+            <h3 class="fw-bold mb-1">Soạn thảo Bài học & Tải lên Tài liệu</h3>
+            <p class="text-muted small mb-4">Hỗ trợ các tệp PowerPoint, Word, PDF, Markdown hoặc Text.</p>
+
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="classId" value="@ViewBag.ClassId" />
-                <div class="mb-3">
-                    <label class="form-label font-weight-bold">Tiêu đề:</label>
-                    <input name="title" class="form-control" required />
+                
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-muted">Tiêu đề bài học</label>
+                    <input name="title" class="form-control md-text-field" placeholder="Ví dụ: Bài 3 - Kiểm soát truy cập & Phân quyền" required />
                 </div>
-                <div class="mb-3">
-                    <label class="form-label font-weight-bold">Nội dung bài học:</label>
-                    <textarea name="content" class="form-control" rows="6" required></textarea>
+
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-muted">Nội dung chi tiết</label>
+                    <textarea name="content" class="form-control md-text-field" rows="6" placeholder="Nhập tóm tắt hoặc nội dung bài giảng..." required></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary w-100">Lưu bản nháp</button>
+
+                <!-- Ô Upload tài liệu đính kèm -->
+                <div class="mb-4 p-3 rounded-4" style="background-color: var(--md-sys-color-surface-container-low);">
+                    <label class="form-label small fw-bold text-muted d-block">
+                        <i class="bi bi-paperclip me-1"></i> Tệp tài liệu đính kèm (.ppt, .pptx, .doc, .docx, .pdf, .md):
+                    </label>
+                    <input type="file" name="attachment" class="form-control rounded-pill bg-white border-0" accept=".ppt,.pptx,.doc,.docx,.pdf,.md,.txt" />
+                    <small class="text-muted mt-1 d-block">Dung lượng tối đa: 15MB.</small>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <a asp-action="Index" asp-route-classId="@ViewBag.ClassId" class="md-btn md-btn-outlined w-50">Hủy</a>
+                    <button type="submit" class="md-btn md-btn-filled w-50">Lưu bài học</button>
+                </div>
             </form>
         </div>
     </div>

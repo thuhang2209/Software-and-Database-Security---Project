@@ -1,42 +1,69 @@
 @model Software_and_Database_Security___Project.Models.Classroom
 @{
-    ViewData["Title"] = "Chi tiết Lớp học";
+    ViewData["Title"] = "Ghi danh - " + Model.Name;
 }
-<div class="container mt-4">
-    <h3>Lớp: @Model.Name</h3>
-    <p><strong>Giảng viên phụ trách:</strong> @Model.Teacher?.FullName</p>
-    <hr />
 
-    <div class="row">
-        <div class="col-md-7">
-            <h5>Danh sách học viên đã ghi danh (@Model.Enrollments.Count)</h5>
-            <ul class="list-group">
+<div class="md-card mb-4 p-4 shadow-sm" style="border-radius: 32px; background: linear-gradient(135deg, var(--md-sys-color-surface-container) 0%, #ece2f5 100%);">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <span class="md-chip bg-white shadow-sm mb-2" style="color: var(--md-sys-color-primary);">
+                <i class="bi bi-book-half"></i> Khóa học #@Model.Id
+            </span>
+            <h3 class="fw-bold mb-1" style="color: var(--md-sys-color-on-surface);">@Model.Name</h3>
+            <div class="small text-muted">Giảng viên phụ trách: <strong>@Model.Teacher?.FullName</strong> (@Model.Teacher?.Email)</div>
+        </div>
+        <a asp-action="Index" class="md-btn md-btn-outlined">Quay lại</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Cột trái: Danh sách sinh viên đã ghi danh -->
+    <div class="col-lg-7">
+        <div class="md-card p-4 h-100">
+            <h5 class="fw-bold mb-3"><i class="bi bi-people-fill me-2" style="color: var(--md-sys-color-primary);"></i>Sinh viên đã ghi danh (@Model.Enrollments.Count)</h5>
+            <div class="list-group list-group-flush rounded-4 overflow-hidden border">
+                @if (!Model.Enrollments.Any())
+                {
+                    <div class="p-4 text-center text-muted small">Lớp học chưa có sinh viên nào. Hãy thêm từ danh sách bên phải.</div>
+                }
                 @foreach (var e in Model.Enrollments)
                 {
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        @e.Student?.FullName (@e.Student?.Email)
-                        <span class="badge bg-success">Đã ghi danh</span>
-                    </li>
-                }
-            </ul>
-        </div>
-        <div class="col-md-5">
-            <div class="card p-3">
-                <h5>Thêm học viên vào lớp</h5>
-                <form asp-action="EnrollStudent" method="post">
-                    <input type="hidden" name="classId" value="@Model.Id" />
-                    <div class="mb-3">
-                        <select name="studentId" class="form-select" required>
-                            <option value="">-- Chọn sinh viên --</option>
-                            @foreach (var s in (IEnumerable<ApplicationUser>)ViewBag.AvailableStudents)
-                            {
-                                <option value="@s.Id">@s.FullName (@s.Email)</option>
-                            }
-                        </select>
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <div>
+                            <div class="fw-bold">@e.Student?.FullName</div>
+                            <small class="text-muted">@e.Student?.Email</small>
+                        </div>
+                        <span class="md-chip" style="background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container);">
+                            <i class="bi bi-check-circle-fill"></i> Đã ghi danh
+                        </span>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Ghi danh</button>
-                </form>
+                }
             </div>
+        </div>
+    </div>
+
+    <!-- Cột phải: Form ghi danh sinh viên mới -->
+    <div class="col-lg-5">
+        <div class="md-card p-4 shadow-sm h-100">
+            <h5 class="fw-bold mb-2"><i class="bi bi-person-plus-fill me-2" style="color: var(--md-sys-color-primary);"></i>Ghi danh học viên mới</h5>
+            <p class="small text-muted mb-4">Hệ thống áp dụng ràng buộc độc nhất (Unique Constraint) cấp CSDL để chống trùng lặp.</p>
+
+            <form asp-action="EnrollStudent" method="post">
+                <input type="hidden" name="classId" value="@Model.Id" />
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-muted">Chọn sinh viên hợp lệ</label>
+                    <select name="studentId" class="form-select rounded-4 p-3 bg-light border-0" required>
+                        <option value="">-- Danh sách sinh viên khả dụng --</option>
+                        @foreach (var s in (IEnumerable<Software_and_Database_Security___Project.Models.ApplicationUser>)ViewBag.AvailableStudents)
+                        {
+                            <option value="@s.Id">@s.FullName (@s.Email)</option>
+                        }
+                    </select>
+                </div>
+                <button type="submit" class="md-btn md-btn-filled w-100 py-3">
+                    <i class="bi bi-plus-lg"></i> Thêm vào lớp học
+                </button>
+            </form>
         </div>
     </div>
 </div>

@@ -1,101 +1,139 @@
 @model Software_and_Database_Security___Project.Models.Assignment
 @{
-    ViewData["Title"] = "Chấm điểm - " + Model.Title;
+    ViewData["Title"] = "Quản lý bài nộp - " + Model.Title;
+    var allStudents = Model.Lesson?.Classroom?.Enrollments.Select(e => e.Student).ToList() ?? new();
+    var submittedStudentIds = Model.Submissions.Select(s => s.StudentId).ToHashSet();
 }
 
-<div class="custom-card p-4 mb-4">
-    <div class="d-flex justify-content-between align-items-start">
+<div class="md-card p-4 p-md-5 mb-4 shadow-sm" style="border-radius: 32px; background: linear-gradient(135deg, var(--md-sys-color-surface-container) 0%, #ece2f5 100%);">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
         <div>
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill mb-2">BÀI TẬP</span>
-            <h3 class="fw-bold text-dark">@Model.Title</h3>
-            <p class="text-muted mb-0 small">Thuộc bài học: <strong>@Model.Lesson?.Title</strong> | Lớp: <strong>@Model.Lesson?.Classroom?.Name</strong></p>
+            <span class="md-chip bg-white shadow-sm mb-2" style="color: var(--md-sys-color-primary);">
+                @(Model.AssignmentType == "Quiz" ? "BÀI KIỂM TRA" : "BÀI TẬP VỀ NHÀ")
+            </span>
+            <h3 class="fw-bold mb-1" style="color: var(--md-sys-color-on-surface);">@Model.Title</h3>
+            <p class="text-muted small mb-0">Thuộc bài học: <strong>@Model.Lesson?.Title</strong> | Lớp: <strong>@Model.Lesson?.Classroom?.Name</strong></p>
         </div>
-        <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2">
-            Đã nộp: @Model.Submissions.Count bài
-        </span>
+        <a asp-controller="Lessons" asp-action="Details" asp-route-id="@Model.LessonId" class="md-btn md-btn-outlined">Quay lại bài học</a>
     </div>
 </div>
 
-<div class="custom-card overflow-hidden">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th class="ps-4">HỌC VIÊN</th>
-                    <th>THỜI GIAN NỘP</th>
-                    <th>BÀI LÀM</th>
-                    <th>KẾT QUẢ</th>
-                    <th class="text-end pe-4">THAO TÁC</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (!Model.Submissions.Any())
-                {
-                    <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">
-                            <i class="bi bi-inbox display-5 d-block mb-2"></i>
-                            Chưa có học viên nào nộp bài tập này[cite: 8].
-                        </td>
-                    </tr>
-                }
-                @foreach (var sub in Model.Submissions)
-                {
-                    <tr>
-                        <td class="ps-4">
-                            <div class="fw-bold">@sub.Student?.FullName</div>
-                            <small class="text-muted">@sub.Student?.Email</small>
-                        </td>
-                        <td><small class="text-muted">@sub.SubmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small></td>
-                        <td>
-                            <div class="p-2 bg-light rounded small font-monospace text-truncate" style="max-width: 250px;">
-                                @sub.Content
-                            </div>
-                        </td>
-                        <td>
-                            @if (sub.Grade.HasValue)
-                            {
-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2 fw-bold">
-                                    @sub.Grade / 10
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-2">
-                                    Chưa chấm
-                                </span>
-                            }
-                        </td>
-                        <td class="text-end pe-4">
-                            <button class="btn btn-outline-primary btn-sm rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#grade-@sub.Id">
-                                <i class="bi bi-pencil-square me-1"></i> Đánh giá
-                            </button>
-                        </td>
-                    </tr>
-                    <tr class="collapse" id="grade-@sub.Id">
-                        <td colspan="5" class="bg-light p-4">
-                            <div class="card p-3 border-0 shadow-sm">
-                                <h6 class="fw-bold text-dark mb-3">Nội dung bài làm đầy đủ:</h6>
-                                <pre class="p-3 bg-light rounded text-dark border mb-3" style="white-space: pre-wrap;">@sub.Content</pre>
+<div class="row g-4">
+    <!-- Bảng danh sách học viên đã nộp bài -->
+    <div class="col-lg-8">
+        <div class="md-card p-0 overflow-hidden shadow-sm h-100">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center" style="background-color: var(--md-sys-color-surface-container-high);">
+                <h5 class="fw-bold mb-0"><i class="bi bi-file-earmark-check-fill me-2" style="color: var(--md-sys-color-primary);"></i>Bài nộp từ Sinh viên (@Model.Submissions.Count)</h5>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="small text-muted text-uppercase">
+                        <tr>
+                            <th class="ps-4">Học viên</th>
+                            <th>Thời gian</th>
+                            <th>Bài làm</th>
+                            <th>Điểm</th>
+                            <th class="text-end pe-4">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Submissions.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox display-6 d-block mb-2"></i> Chưa có sinh viên nào nộp bài.
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var sub in Model.Submissions)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">@sub.Student?.FullName</div>
+                                    <small class="text-muted">@sub.Student?.Email</small>
+                                </td>
+                                <td><small class="text-muted">@sub.SubmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small></td>
+                                <td>
+                                    <div class="p-2 bg-light rounded-3 small font-monospace text-truncate" style="max-width: 180px;">
+                                        @sub.Content
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (sub.Grade.HasValue)
+                                    {
+                                        <span class="md-chip bg-success-subtle text-success fw-bold">@sub.Grade / 10</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="md-chip bg-warning-subtle text-warning-emphasis">Chưa chấm</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <button class="md-btn md-btn-tonal py-1 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#grade-@sub.Id">
+                                        Chấm điểm & Feedback
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="collapse" id="grade-@sub.Id">
+                                <td colspan="5" class="bg-light p-4">
+                                    <div class="p-3 bg-white rounded-4 border">
+                                        <h6 class="fw-bold mb-2">Nội dung bài làm đầy đủ:</h6>
+                                        <pre class="p-3 bg-light rounded-3 text-dark mb-3" style="white-space: pre-wrap;">@sub.Content</pre>
 
-                                <form asp-action="Grade" method="post" class="row g-3">
-                                    <input type="hidden" name="submissionId" value="@sub.Id" />
-                                    <div class="col-md-3">
-                                        <label class="form-label small fw-bold">Điểm số (thang 10):</label>
-                                        <input type="number" step="0.25" min="0" max="10" name="grade" value="@sub.Grade" class="form-control" placeholder="0 - 10" required />
+                                        <form asp-action="Grade" method="post" class="row g-3">
+                                            <input type="hidden" name="submissionId" value="@sub.Id" />
+                                            <div class="col-md-3">
+                                                <label class="form-label small fw-bold text-muted">Điểm số (0 - 10):</label>
+                                                <input type="number" step="0.25" min="0" max="10" name="grade" value="@sub.Grade" class="form-control rounded-pill px-3" required />
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold text-muted">Nhận xét & Phản hồi (Feedback):</label>
+                                                <input type="text" name="feedback" value="@sub.Feedback" class="form-control rounded-pill px-3" placeholder="Nhập lời nhận xét cho học viên..." required />
+                                            </div>
+                                            <div class="col-md-3 d-flex align-items-end">
+                                                <button type="submit" class="md-btn md-btn-filled w-100">Lưu đánh giá</button>
+                                            </div>
+                                        </form>
                                     </div>
-                                    <div class="col-md-7">
-                                        <label class="form-label small fw-bold">Nhận xét chi tiết:</label>
-                                        <input type="text" name="feedback" value="@sub.Feedback" class="form-control" placeholder="Nhập lời phê cho học viên..." />
-                                    </div>
-                                    <div class="col-md-2 d-flex align-items-end">
-                                        <button type="submit" class="btn btn-gradient w-100">Lưu kết quả</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách theo dõi học sinh chưa nộp bài -->
+    <div class="col-lg-4">
+        <div class="md-card p-4 shadow-sm h-100">
+            <h5 class="fw-bold mb-3"><i class="bi bi-person-x-fill me-2 text-danger"></i>Học viên chưa nộp</h5>
+            <ul class="list-group list-group-flush rounded-4 overflow-hidden border">
+                @{
+                    var missingCount = 0;
                 }
-            </tbody>
-        </table>
+                @foreach (var student in allStudents)
+                {
+                    if (student != null && !submittedStudentIds.Contains(student.Id))
+                    {
+                        missingCount++;
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                            <div>
+                                <div class="fw-bold small">@student.FullName</div>
+                                <small class="text-muted">@student.Email</small>
+                            </div>
+                            <span class="badge bg-danger-subtle text-danger rounded-pill">Chưa nộp</span>
+                        </li>
+                    }
+                }
+                @if (missingCount == 0)
+                {
+                    <li class="list-group-item text-center text-success py-3">
+                        <i class="bi bi-check-all fs-4 d-block"></i> 100% học viên đã hoàn thành!
+                    </li>
+                }
+            </ul>
+        </div>
     </div>
 </div>

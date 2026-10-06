@@ -34,6 +34,10 @@ namespace Software_and_Database_Security___Project.Models
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public bool IsPublished { get; set; } = false;
+
+        public string? AttachmentFileName { get; set; } // Tên file hiển thị (vd: Slide_Bai1.pptx)
+        public string? AttachmentFilePath { get; set; } // Tên file lưu trên ổ đĩa (vd: 3f8a-...pptx)
+
         public ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
     }
 
@@ -42,8 +46,13 @@ namespace Software_and_Database_Security___Project.Models
         public int Id { get; set; }
         public int LessonId { get; set; }
         public Lesson? Lesson { get; set; }
+
         public string Title { get; set; } = string.Empty;
         public string Instructions { get; set; } = string.Empty;
+
+        // Phân loại: "Homework" (BTVN) hoặc "Quiz" (Bài kiểm tra)
+        public string AssignmentType { get; set; } = "Homework";
+
         public DateTime? Deadline { get; set; }
         public ICollection<Submission> Submissions { get; set; } = new List<Submission>();
     }
@@ -53,10 +62,13 @@ namespace Software_and_Database_Security___Project.Models
         public int Id { get; set; }
         public int AssignmentId { get; set; }
         public Assignment? Assignment { get; set; }
+
         public string StudentId { get; set; } = string.Empty;
         public ApplicationUser? Student { get; set; }
+
         public string Content { get; set; } = string.Empty;
         public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
+
         public double? Grade { get; set; }
         public string? Feedback { get; set; }
     }

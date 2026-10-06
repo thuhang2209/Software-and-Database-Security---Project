@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -19,115 +21,123 @@ namespace Software_and_Database_Security___Project.Controllers
             _userManager = userManager;
         }
 
-        // Danh sách bài nộp cho Giáo viên xem và chấm điểm
+        // GET: /Submissions/Index?assignmentId=5 (Giảng viên xem danh sách nộp bài)
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> Index(int assignmentId)
         {
-            var teacherId = _userManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User);
             var assignment = await _context.Assignments
                 .Include(a => a.Lesson)
                     .ThenInclude(l => l!.Classroom)
+                        .ThenInclude(c => c!.Enrollments)
+                            .ThenInclude(e => e.Student)
                 .Include(a => a.Submissions)
                     .ThenInclude(s => s.Student)
                 .FirstOrDefaultAsync(a => a.Id == assignmentId);
 
-            if (assignment == null) return NotFound();
-
-            // Yêu cầu 6: Chặn giáo viên lớp khác
-            if (assignment.Lesson!.Classroom!.TeacherId != teacherId)
+            if (assignment == null || assignment.Lesson?.Classroom?.TeacherId != userId)
+            {
                 return Forbid();
+            }
 
             return View(assignment);
         }
 
-        // Học sinh mở trang nộp bài
-        [HttpGet]
+        // GET: /Submissions/Submit?assignmentId=5 (Sinh viên vào giao diện nộp bài)
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> Submit(int assignmentId)
         {
-            var studentId = _userManager.GetUserId(User)!;
+            var userId = _userManager.GetUserId(User);
             var assignment = await _context.Assignments
                 .Include(a => a.Lesson)
+                    .ThenInclude(l => l!.Classroom)
+                        .ThenInclude(c => c!.Enrollments)
                 .FirstOrDefaultAsync(a => a.Id == assignmentId);
 
-            if (assignment == null || !assignment.Lesson!.IsPublished) return Forbid();
+            if (assignment == null) return NotFound();
+            if (!assignment.Lesson!.IsPublished) return Forbid();
+            if (!assignment.Lesson.Classroom!.Enrollments.Any(e => e.StudentId == userId)) return Forbid();
 
-            var isEnrolled = await _context.Enrollments
-                .AnyAsync(e => e.ClassroomId == assignment.Lesson.ClassroomId && e.StudentId == studentId);
-            if (!isEnrolled) return Forbid();
-
-            var currentSubmission = await _context.Submissions
-                .FirstOrDefaultAsync(s => s.AssignmentId == assignmentId && s.StudentId == studentId);
+            var existingSubmission = await _context.Submissions
+                .FirstOrDefaultAsync(s => s.AssignmentId == assignmentId && s.StudentId == userId);
 
             ViewBag.Assignment = assignment;
-            return View(currentSubmission);
+            return View(existingSubmission);
         }
 
-        // Xử lý nộp bài
+        // POST: /Submissions/Submit
         [HttpPost]
         [Authorize(Roles = "Student")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Submit(int assignmentId, string content)
         {
-            var studentId = _userManager.GetUserId(User)!;
+            var userId = _userManager.GetUserId(User);
             var assignment = await _context.Assignments
                 .Include(a => a.Lesson)
+                    .ThenInclude(l => l!.Classroom)
+                        .ThenInclude(c => c!.Enrollments)
                 .FirstOrDefaultAsync(a => a.Id == assignmentId);
 
             if (assignment == null || !assignment.Lesson!.IsPublished) return Forbid();
+            if (!assignment.Lesson.Classroom!.Enrollments.Any(e => e.StudentId == userId)) return Forbid();
 
-            var submission = await _context.Submissions
-                .FirstOrDefaultAsync(s => s.AssignmentId == assignmentId && s.StudentId == studentId);
-
-            if (submission != null && submission.Grade.HasValue)
+            if (assignment.Deadline.HasValue && DateTime.UtcNow > assignment.Deadline.Value)
             {
-                ModelState.AddModelError("", "Bài làm đã được chấm điểm, không thể chỉnh sửa.");
+                ModelState.AddModelError("", "Đã quá hạn nộp bài.");
                 ViewBag.Assignment = assignment;
-                return View(submission);
+                return View();
             }
 
-            if (submission == null)
+            var submission = await _context.Submissions
+                .FirstOrDefaultAsync(s => s.AssignmentId == assignmentId && s.StudentId == userId);
+
+            if (submission != null)
+            {
+                if (submission.Grade.HasValue)
+                {
+                    return Forbid();
+                }
+                submission.Content = content;
+                submission.SubmittedAt = DateTime.UtcNow;
+            }
+            else
             {
                 submission = new Submission
                 {
                     AssignmentId = assignmentId,
-                    StudentId = studentId,
+                    StudentId = userId,
                     Content = content,
                     SubmittedAt = DateTime.UtcNow
                 };
                 _context.Submissions.Add(submission);
             }
-            else
-            {
-                submission.Content = content;
-                submission.SubmittedAt = DateTime.UtcNow;
-            }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction("Details", "Lessons", new { id = assignment.LessonId });
+            return RedirectToAction(nameof(Submit), new { assignmentId });
         }
 
-        // Giáo viên vào chấm điểm
+        // POST: /Submissions/Grade (Giảng viên đánh giá & phản hồi)
         [HttpPost]
         [Authorize(Roles = "Teacher")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Grade(int submissionId, double grade, string feedback)
         {
-            var teacherId = _userManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User);
             var submission = await _context.Submissions
                 .Include(s => s.Assignment)
                     .ThenInclude(a => a!.Lesson)
                         .ThenInclude(l => l!.Classroom)
                 .FirstOrDefaultAsync(s => s.Id == submissionId);
 
-            if (submission == null) return NotFound();
-
-            // Yêu cầu 6: Xác thực quyền sở hữu lớp trước khi chấm
-            if (submission.Assignment!.Lesson!.Classroom!.TeacherId != teacherId)
+            if (submission == null || submission.Assignment?.Lesson?.Classroom?.TeacherId != userId)
+            {
                 return Forbid();
+            }
 
-            submission.Grade = grade;
+            submission.Grade = Math.Clamp(grade, 0, 10);
             submission.Feedback = feedback;
-            await _context.SaveChangesAsync();
 
+            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index), new { assignmentId = submission.AssignmentId });
         }
     }
