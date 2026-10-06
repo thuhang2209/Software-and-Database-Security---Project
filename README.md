@@ -148,6 +148,3 @@ dotnet ef migrations add <MigrationName>
 dotnet ef database update
 ```
 
-## License
-
-No license has been specified for this repository. Unless a license is added, all rights are reserved by the repository owner.
