@@ -45,23 +45,6 @@ A secure Learning Management System (LMS) built with ASP.NET Core MVC, ASP.NET C
 - Teachers can grade submissions from 0 to 10 and provide feedback.
 - Lesson, assignment, and submission downloads are protected by role and ownership checks.
 
-## Authorization Matrix
-
-| Functionality | Admin | Teacher | Student |
-|---|:---:|:---:|:---:|
-| Create and manage classrooms | Yes | No | No |
-| Assign teachers to classrooms | Yes | No | No |
-| Enroll students | Yes | No | No |
-| View a classroom | Yes | Yes, if assigned | Yes, if enrolled |
-| Create lessons | No | Yes, in assigned classrooms | No |
-| Publish lessons | No | Yes, in assigned classrooms | No |
-| Create assignments and quizzes | No | Yes, in owned lessons | No |
-| View published lessons and assignments | Yes | Yes, in owned classrooms | Yes, if enrolled |
-| Submit assignments | No | No | Yes, if enrolled |
-| View submissions | No | Yes, for owned classrooms | Own submission only |
-| Download submission files | No | Yes, for owned classrooms | Own submission only |
-| Grade submissions | No | Yes, for owned classrooms | No |
-
 ## Technology Stack
 
 - **Framework:** ASP.NET Core MVC
