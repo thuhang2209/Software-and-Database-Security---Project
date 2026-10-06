@@ -1,32 +1,120 @@
 @model IEnumerable<Software_and_Database_Security___Project.Models.Lesson>
 @{
     var cls = ViewBag.Classroom as Software_and_Database_Security___Project.Models.Classroom;
-    ViewData["Title"] = "Bài học - " + cls?.Name;
+    ViewData["Title"] = cls?.Name;
 }
 
-<!-- Khung tiêu đề lớp học chuẩn Material You -->
+<!-- 1. Header Khóa học chuẩn MD3 -->
 <div class="md-card p-4 p-md-5 mb-4 shadow-sm" style="border-radius: 32px; background: linear-gradient(135deg, var(--md-sys-color-primary-container) 0%, #f4e8ff 100%);">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
         <div>
-            <span class="md-chip bg-white shadow-sm mb-2" style="color: var(--md-sys-color-primary);">
-                <i class="bi bi-mortarboard-fill"></i> Khóa học
-            </span>
+            <div class="d-flex gap-2 align-items-center mb-2">
+                <span class="md-chip bg-white shadow-sm" style="color: var(--md-sys-color-primary);">
+                    <i class="bi bi-mortarboard-fill"></i> Khóa học #@cls?.Id
+                </span>
+                <span class="md-chip bg-white shadow-sm text-dark">
+                    <i class="bi bi-people-fill text-muted me-1"></i> Sĩ số: @(cls?.Enrollments.Count ?? 0) học viên
+                </span>
+            </div>
             <h2 class="display-6 fw-bold mb-1" style="color: var(--md-sys-color-on-primary-container);">@cls?.Name</h2>
             <div class="small text-muted">
-                Giảng viên phụ trách: <strong>@(cls?.Teacher?.FullName ?? "Chưa chỉ định")</strong>
+                Giảng viên phụ trách: <strong class="text-dark">@(cls?.Teacher?.FullName ?? "Chưa phân công")</strong> (@(cls?.Teacher?.Email ?? "N/A"))
             </div>
         </div>
 
-        @if (User.IsInRole("Teacher"))
-        {
-            <a asp-action="Create" asp-route-classId="@cls?.Id" class="md-btn md-btn-filled shadow">
-                <i class="bi bi-plus-lg"></i> Thêm Bài Học Mới
-            </a>
-        }
+        <div>
+            @if (User.IsInRole("Teacher"))
+            {
+                <a asp-action="Create" asp-route-classId="@cls?.Id" class="md-btn md-btn-filled shadow">
+                    <i class="bi bi-plus-lg"></i> Thêm Bài Học Mới
+                </a>
+            }
+        </div>
     </div>
 </div>
 
-<!-- Danh sách bài học -->
+<!-- 2. KHU VỰC QUẢN LÝ GHI DANH (TÍCH HỢP CHO ADMIN) -->
+@if (User.IsInRole("Admin"))
+{
+    <div class="md-card p-4 mb-5 shadow-sm border" style="border-radius: 28px; background-color: var(--md-sys-color-surface-container);">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold mb-0" style="color: var(--md-sys-color-primary);">
+                <i class="bi bi-person-gear me-2"></i>Quản lý Ghi danh Học sinh
+            </h4>
+            <span class="small text-muted">Quyền hạn Administrator</span>
+        </div>
+
+        <div class="row g-4">
+            <!-- Danh sách học viên đã có trong lớp -->
+            <div class="col-md-7">
+                <div class="bg-white p-3 rounded-4 border h-100">
+                    <h6 class="fw-bold mb-3 text-muted small text-uppercase">Danh sách học sinh trong lớp (@cls?.Enrollments.Count)</h6>
+                    <div class="overflow-auto" style="max-height: 220px;">
+                        @if (cls?.Enrollments == null || !cls.Enrollments.Any())
+                        {
+                            <div class="text-muted small p-3 text-center">Chưa có học sinh nào được ghi danh vào lớp này.</div>
+                        }
+                        else
+                        {
+                            <ul class="list-group list-group-flush small">
+                                @foreach (var e in cls.Enrollments)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                                        <div>
+                                            <span class="fw-bold">@e.Student?.FullName</span>
+                                            <div class="text-muted" style="font-size: 0.8rem;">@e.Student?.Email</div>
+                                        </div>
+                                        <span class="md-chip bg-success-subtle text-success py-1 px-2" style="font-size: 0.75rem;">
+                                            <i class="bi bi-check2"></i> Đang học
+                                        </span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form ghi danh học sinh mới vào lớp -->
+            <div class="col-md-5">
+                <div class="bg-white p-3 rounded-4 border h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <h6 class="fw-bold mb-2 text-muted small text-uppercase">Ghi danh học sinh mới</h6>
+                        <p class="small text-muted mb-3">Chọn tài khoản học sinh để thêm vào khóa học này.</p>
+                        
+                        <form asp-action="EnrollStudent" method="post">
+                            <input type="hidden" name="classId" value="@cls?.Id" />
+                            <div class="mb-3">
+                                <select name="studentId" class="form-select rounded-pill px-3 bg-light border-0 small" required>
+                                    <option value="">-- Chọn học sinh khả dụng --</option>
+                                    @if (ViewBag.AvailableStudents != null)
+                                    {
+                                        foreach (var s in (IEnumerable<Software_and_Database_Security___Project.Models.ApplicationUser>)ViewBag.AvailableStudents)
+                                        {
+                                            <option value="@s.Id">@s.FullName (@s.Email)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <button type="submit" class="md-btn md-btn-filled w-100 py-2">
+                                <i class="bi bi-plus-lg"></i> Thêm vào lớp ngay
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 3. KHU VỰC NỘI DUNG BÀI HỌC CỦA KHÓA HỌC -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold mb-0" style="color: var(--md-sys-color-on-surface);">
+        <i class="bi bi-collection-play me-2" style="color: var(--md-sys-color-primary);"></i>Nội dung khóa học
+    </h4>
+    <span class="text-muted small">Tổng số: @Model.Count() bài</span>
+</div>
+
 <div class="d-flex flex-column gap-3">
     @if (!Model.Any())
     {

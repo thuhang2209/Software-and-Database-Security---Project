@@ -59,6 +59,25 @@
                                         @sub.Content
                                     </div>
                                 </td>
+
+                                <td>
+                                    @if (!string.IsNullOrEmpty(sub.SubmissionFileName))
+                                    {
+                                        <div class="mb-1">
+                                            <a asp-action="DownloadSubmissionFile" asp-route-submissionId="@sub.Id" class="badge bg-primary text-white text-decoration-none rounded-pill py-2 px-3">
+                                                <i class="bi bi-file-earmark-arrow-down-fill me-1"></i> @sub.SubmissionFileName
+                                            </a>
+                                        </div>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(sub.Content))
+                                    {
+                                        <div class="p-2 bg-light rounded-3 small font-monospace text-truncate" style="max-width: 180px;">
+                                            @sub.Content
+                                        </div>
+                                    }
+                                </td>
+
                                 <td>
                                     @if (sub.Grade.HasValue)
                                     {

@@ -12,30 +12,76 @@
                     <span class="md-chip bg-white shadow-sm mb-2" style="color: var(--md-sys-color-primary);">
                         <i class="bi bi-upload"></i> Nộp bài làm
                     </span>
-                    <h3 class="fw-bold mb-1">@asm?.Title</h3>
+                    <h2 class="fw-bold mb-1">@asm?.Title</h2>
                 </div>
-                <a asp-controller="Lessons" asp-action="Details" asp-route-id="@asm?.LessonId" class="md-btn md-btn-outlined">Quay lại bài học</a>
+                <a asp-controller="Lessons" asp-action="Details" asp-route-id="@asm?.LessonId" class="md-btn md-btn-outlined">
+                    Quay lại bài học
+                </a>
             </div>
 
+            <!-- Yêu cầu đề bài -->
             <div class="p-3 rounded-4 mb-4" style="background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container);">
                 <strong>Yêu cầu đề bài:</strong>
                 <p class="mb-0 small mt-1">@asm?.Instructions</p>
             </div>
 
-            <form asp-action="Submit" method="post">
+            <div class="p-4 rounded-4 mb-4" style="background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container);">
+                <strong class="fs-6"><i class="bi bi-info-circle me-1"></i> Yêu cầu đề bài:</strong>
+                <p class="mb-2 mt-1">@asm?.Instructions</p>
+
+                @if (!string.IsNullOrEmpty(asm?.AssignmentFilePath))
+                {
+                    <div class="pt-2 border-top border-secondary-subtle">
+                        <span class="small fw-bold me-2">Tệp đề bài đính kèm:</span>
+                        <a asp-controller="Lessons" asp-action="DownloadAssignmentFile" asp-route-assignmentId="@asm.Id" class="md-btn md-btn-filled py-1 px-3 shadow-none">
+                            <i class="bi bi-file-earmark-arrow-down-fill me-1"></i> Tải về: @asm.AssignmentFileName
+                        </a>
+                    </div>
+                }
+            </div>
+
+            <form asp-action="Submit" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="assignmentId" value="@asm?.Id" />
 
+                <!-- 1. Văn bản bài làm / Code -->
                 <div class="mb-4">
                     <label class="form-label small fw-bold text-muted">Nội dung bài làm (Nhập văn bản hoặc mã nguồn):</label>
-                    <textarea name="content" class="form-control rounded-4 p-3 bg-light border-0 font-monospace" rows="10" placeholder="Viết câu trả lời hoặc dán mã nguồn vào đây..." required>@(Model?.Content)</textarea>
+                    <textarea name="content" class="form-control rounded-4 p-3 bg-light border-0 font-monospace" rows="8" placeholder="Viết câu trả lời hoặc dán mã nguồn vào đây...">@(Model?.Content)</textarea>
                 </div>
 
+                <!-- 2. Tải tệp bài nộp lên -->
+                <div class="mb-4 p-3 rounded-4" style="background-color: var(--md-sys-color-surface-container-low);">
+                    <label class="form-label small fw-bold text-muted d-block">
+                        <i class="bi bi-paperclip me-1"></i> Đính kèm tệp bài làm (.pdf, .docx, .zip, .rar, .txt, .cs, .sql):
+                    </label>
+
+                    @if (!string.IsNullOrEmpty(Model?.SubmissionFileName))
+                    {
+                        <div class="d-flex align-items-center justify-content-between p-2 mb-2 bg-white rounded-pill px-3 border">
+                            <span class="small fw-bold text-truncate" style="max-width: 300px;">
+                                <i class="bi bi-file-earmark-check text-success me-1"></i> Tệp hiện tại: @Model.SubmissionFileName
+                            </span>
+                            <a asp-action="DownloadSubmissionFile" asp-route-submissionId="@Model.Id" class="badge bg-primary text-white text-decoration-none rounded-pill px-3 py-2">
+                                <i class="bi bi-download"></i> Xem lại tệp
+                            </a>
+                        </div>
+                    }
+
+                    @if (Model?.Grade == null)
+                    {
+                        <input type="file" name="submissionFile" class="form-control rounded-pill bg-white border-0" accept=".pdf,.docx,.doc,.zip,.rar,.txt,.cs,.cpp,.sql,.py" />
+                        <small class="text-muted mt-1 d-block">Dung lượng tối đa: 20MB. Chọn tệp mới nếu bạn muốn thay đổi tệp đã gửi.</small>
+                    }
+                </div>
+
+                <!-- 3. Khu vực điểm & nhận xét hoặc nút gửi -->
                 @if (Model?.Grade != null)
                 {
                     <div class="p-4 rounded-4 mb-4" style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);">
                         <h5 class="fw-bold mb-2"><i class="bi bi-award-fill me-2"></i>Kết quả đánh giá từ Giảng viên</h5>
                         <div class="mb-1"><strong>Điểm số:</strong> <span class="badge bg-white fs-6" style="color: var(--md-sys-color-primary);">@Model.Grade / 10</span></div>
                         <div class="small"><strong>Nhận xét:</strong> @Model.Feedback</div>
+                        <div class="small text-muted mt-2 fst-italic">* Bài làm đã được chấm điểm, không thể sửa đổi.</div>
                     </div>
                 }
                 else

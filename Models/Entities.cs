@@ -53,6 +53,9 @@ namespace Software_and_Database_Security___Project.Models
         // Phân loại: "Homework" (BTVN) hoặc "Quiz" (Bài kiểm tra)
         public string AssignmentType { get; set; } = "Homework";
 
+        public string? AssignmentFileName { get; set; } // Tên gốc (vd: DeThi_KiemTra15P.pdf)
+        public string? AssignmentFilePath { get; set; } // Tên mã hóa GUID lưu trên ổ đĩa
+
         public DateTime? Deadline { get; set; }
         public ICollection<Submission> Submissions { get; set; } = new List<Submission>();
     }
@@ -68,6 +71,9 @@ namespace Software_and_Database_Security___Project.Models
 
         public string Content { get; set; } = string.Empty;
         public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
+
+        public string? SubmissionFileName { get; set; } // Tên tệp gốc sinh viên gửi (ví dụ: BaiTap1.zip)
+        public string? SubmissionFilePath { get; set; } // Tên GUID lưu an toàn trên ổ đĩa
 
         public double? Grade { get; set; }
         public string? Feedback { get; set; }

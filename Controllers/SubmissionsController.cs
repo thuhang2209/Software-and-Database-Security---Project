@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -14,14 +15,19 @@ namespace Software_and_Database_Security___Project.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IWebHostEnvironment _env;
 
-        public SubmissionsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public SubmissionsController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            IWebHostEnvironment env)
         {
             _context = context;
             _userManager = userManager;
+            _env = env;
         }
 
-        // GET: /Submissions/Index?assignmentId=5 (Giảng viên xem danh sách nộp bài)
+        // GET: /Submissions/Index?assignmentId=5 (Giảng viên xem danh sách nộp)
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> Index(int assignmentId)
         {
@@ -65,11 +71,11 @@ namespace Software_and_Database_Security___Project.Controllers
             return View(existingSubmission);
         }
 
-        // POST: /Submissions/Submit
+        // POST: /Submissions/Submit (Xử lý văn bản + Tệp bài làm)
         [HttpPost]
         [Authorize(Roles = "Student")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Submit(int assignmentId, string content)
+        public async Task<IActionResult> Submit(int assignmentId, string? content, IFormFile? submissionFile)
         {
             var userId = _userManager.GetUserId(User);
             var assignment = await _context.Assignments
@@ -81,23 +87,63 @@ namespace Software_and_Database_Security___Project.Controllers
             if (assignment == null || !assignment.Lesson!.IsPublished) return Forbid();
             if (!assignment.Lesson.Classroom!.Enrollments.Any(e => e.StudentId == userId)) return Forbid();
 
+            // Kiểm tra hạn nộp
             if (assignment.Deadline.HasValue && DateTime.UtcNow > assignment.Deadline.Value)
             {
                 ModelState.AddModelError("", "Đã quá hạn nộp bài.");
                 ViewBag.Assignment = assignment;
-                return View();
+                var currSub = await _context.Submissions.FirstOrDefaultAsync(s => s.AssignmentId == assignmentId && s.StudentId == userId);
+                return View(currSub);
             }
 
             var submission = await _context.Submissions
                 .FirstOrDefaultAsync(s => s.AssignmentId == assignmentId && s.StudentId == userId);
 
+            if (submission != null && submission.Grade.HasValue)
+            {
+                return Forbid(); // Đã chấm điểm thì không sửa đổi
+            }
+
+            string? savedFileName = submission?.SubmissionFilePath;
+            string? originalFileName = submission?.SubmissionFileName;
+
+            // Xử lý tệp tải lên nếu sinh viên đính kèm
+            if (submissionFile != null && submissionFile.Length > 0)
+            {
+                if (submissionFile.Length > 20 * 1024 * 1024)
+                {
+                    ModelState.AddModelError("", "Tệp không được vượt quá 20MB.");
+                    ViewBag.Assignment = assignment;
+                    return View(submission);
+                }
+
+                var allowedExts = new[] { ".pdf", ".docx", ".doc", ".zip", ".rar", ".txt", ".cs", ".cpp", ".sql", ".py" };
+                var ext = Path.GetExtension(submissionFile.FileName).ToLowerInvariant();
+                if (!allowedExts.Contains(ext))
+                {
+                    ModelState.AddModelError("", "Định dạng tệp không được hỗ trợ. Chấp nhận: .pdf, .docx, .zip, .rar, .txt, .cs, .sql, v.v.");
+                    ViewBag.Assignment = assignment;
+                    return View(submission);
+                }
+
+                var uploadDir = Path.Combine(_env.ContentRootPath, "App_Data", "Submissions");
+                if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
+
+                savedFileName = $"{Guid.NewGuid()}{ext}";
+                originalFileName = Path.GetFileName(submissionFile.FileName);
+                var fullPath = Path.Combine(uploadDir, savedFileName);
+
+                using (var stream = new FileStream(fullPath, FileMode.Create))
+                {
+                    await submissionFile.CopyToAsync(stream);
+                }
+            }
+
             if (submission != null)
             {
-                if (submission.Grade.HasValue)
-                {
-                    return Forbid();
-                }
-                submission.Content = content;
+                submission.Content = content ?? string.Empty;
+                submission.SubmissionFileName = originalFileName;
+                submission.SubmissionFilePath = savedFileName;
                 submission.SubmittedAt = DateTime.UtcNow;
             }
             else
@@ -106,7 +152,9 @@ namespace Software_and_Database_Security___Project.Controllers
                 {
                     AssignmentId = assignmentId,
                     StudentId = userId,
-                    Content = content,
+                    Content = content ?? string.Empty,
+                    SubmissionFileName = originalFileName,
+                    SubmissionFilePath = savedFileName,
                     SubmittedAt = DateTime.UtcNow
                 };
                 _context.Submissions.Add(submission);
@@ -116,7 +164,31 @@ namespace Software_and_Database_Security___Project.Controllers
             return RedirectToAction(nameof(Submit), new { assignmentId });
         }
 
-        // POST: /Submissions/Grade (Giảng viên đánh giá & phản hồi)
+        // GET: Tải tệp bài nộp an toàn (Kiểm soát quyền giữa Giảng viên và Sinh viên)
+        [HttpGet]
+        public async Task<IActionResult> DownloadSubmissionFile(int submissionId)
+        {
+            var submission = await _context.Submissions
+                .Include(s => s.Assignment)
+                    .ThenInclude(a => a!.Lesson)
+                        .ThenInclude(l => l!.Classroom)
+                .FirstOrDefaultAsync(s => s.Id == submissionId);
+
+            if (submission == null || string.IsNullOrEmpty(submission.SubmissionFilePath)) return NotFound();
+
+            var userId = _userManager.GetUserId(User);
+            bool isTeacher = User.IsInRole("Teacher") && submission.Assignment?.Lesson?.Classroom?.TeacherId == userId;
+            bool isStudentOwner = User.IsInRole("Student") && submission.StudentId == userId;
+
+            if (!isTeacher && !isStudentOwner) return Forbid();
+
+            var filePath = Path.Combine(_env.ContentRootPath, "App_Data", "Submissions", submission.SubmissionFilePath);
+            if (!System.IO.File.Exists(filePath)) return NotFound("Tệp bài làm không tồn tại trên hệ thống.");
+
+            return PhysicalFile(filePath, "application/octet-stream", submission.SubmissionFileName ?? "bailam");
+        }
+
+        // POST: /Submissions/Grade
         [HttpPost]
         [Authorize(Roles = "Teacher")]
         [ValidateAntiForgeryToken]

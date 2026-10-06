@@ -53,7 +53,8 @@
     <div class="collapse mb-4" id="createAssignmentBox">
         <div class="md-card p-4 shadow-sm" style="border-radius: 24px; background-color: var(--md-sys-color-surface-container-high);">
             <h5 class="fw-bold mb-3">Tạo mới Bài tập về nhà hoặc Bài kiểm tra</h5>
-            <form asp-action="CreateAssignment" method="post">
+            <!-- BẮT BUỘC có enctype="multipart/form-data" -->
+            <form asp-action="CreateAssignment" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="lessonId" value="@Model.Id" />
                 <div class="row g-3">
                     <div class="col-md-6">
@@ -73,8 +74,17 @@
                     </div>
                     <div class="col-12">
                         <label class="form-label small fw-bold text-muted">Hướng dẫn & Yêu cầu đề bài</label>
-                        <textarea name="instructions" class="form-control rounded-4 p-3" rows="3" placeholder="Nhập câu hỏi, bài tập hoặc yêu cầu thực hành..." required></textarea>
+                        <textarea name="instructions" class="form-control rounded-4 p-3" rows="3" placeholder="Nhập câu hỏi, mô tả bài tập..." required></textarea>
                     </div>
+
+                    <!-- Ô ĐÍNH KÈM TỆP ĐỀ BÀI CỦA GIẢNG VIÊN -->
+                    <div class="col-12">
+                        <label class="form-label small fw-bold text-muted">
+                            <i class="bi bi-paperclip me-1"></i> Đính kèm tệp đề bài / tài liệu tham khảo (.pdf, .docx, .zip, .pptx):
+                        </label>
+                        <input type="file" name="assignmentFile" class="form-control rounded-pill bg-white border-0 px-3" accept=".pdf,.docx,.doc,.ppt,.pptx,.zip,.rar,.txt,.md" />
+                    </div>
+
                     <div class="col-12 text-end">
                         <button type="submit" class="md-btn md-btn-filled px-4">Tạo bài ngay</button>
                     </div>
@@ -107,25 +117,40 @@
                     }
                     <h5 class="fw-bold mb-0">@asm.Title</h5>
                 </div>
-                <small class="text-muted">
+
+                <div class="small text-muted mb-2">
                     <i class="bi bi-clock me-1"></i> Hạn nộp: @(asm.Deadline.HasValue ? asm.Deadline.Value.ToString("dd/MM/yyyy HH:mm") : "Không giới hạn")
                     | Đã nộp: <strong>@asm.Submissions.Count</strong> bài
-                </small>
-            </div>
-            <div>
-                @if (User.IsInRole("Student"))
+                </div>
+
+                @* Hiển thị tệp đính kèm đề bài nếu giáo viên có tải lên *@
+                @if (!string.IsNullOrEmpty(asm.AssignmentFilePath))
                 {
-                    <a asp-controller="Submissions" asp-action="Submit" asp-route-assignmentId="@asm.Id" class="md-btn md-btn-filled">
-                        <i class="bi bi-send"></i> Nộp bài làm
+                    <a asp-action="DownloadAssignmentFile" asp-route-assignmentId="@asm.Id" class="badge bg-secondary-subtle text-dark text-decoration-none rounded-pill px-3 py-2">
+                        <i class="bi bi-download me-1 text-primary"></i> Đề bài đính kèm: <strong>@asm.AssignmentFileName</strong>
                     </a>
                 }
+            </div>
+
+            <!-- CỘT PHẢI: Nút hành động tương ứng với Role -->
+            <div class="flex-shrink-0">
+                @* Dành cho Sinh viên: Nút chuyển hướng sang màn hình làm bài nộp *@
+                @if (User.IsInRole("Student"))
+                {
+                    <a asp-controller="Submissions" asp-action="Submit" asp-route-assignmentId="@asm.Id" class="md-btn md-btn-filled shadow-sm">
+                        <i class="bi bi-send-fill me-1"></i> Làm bài
+                    </a>
+                }
+
+                @* Dành cho Giảng viên: Nút chuyển sang màn hình danh sách chấm bài *@
                 @if (User.IsInRole("Teacher"))
                 {
                     <a asp-controller="Submissions" asp-action="Index" asp-route-assignmentId="@asm.Id" class="md-btn md-btn-tonal">
-                        <i class="bi bi-card-checklist"></i> Xem ai đã nộp & Phản hồi
+                        <i class="bi bi-card-checklist me-1"></i> Danh sách chấm bài
                     </a>
                 }
             </div>
+
         </div>
     }
 </div>
